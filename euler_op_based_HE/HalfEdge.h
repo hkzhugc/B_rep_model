@@ -70,11 +70,13 @@ namespace B_rep
 		HalfEdgeIter &twin() { return _twin; }
 		HalfEdgeIter &next() { return _next; }
 		EdgeIter &edge() { return _edge; }
+		LoopIter &loop() { return _loop; }
 	private:
 		HalfEdgeIter _twin; 
 		HalfEdgeIter _next; 
 		VertexIter _vertex; 
-		EdgeIter _edge; 
+		EdgeIter _edge;
+		LoopIter _loop;
 	};
 
 	class Vertex
@@ -120,6 +122,7 @@ namespace B_rep
 
 	Solid * mvfs(Vector3f pos, VertexIter &new_vi, FaceIter &new_fi, LoopIter &new_li);
 	VertexIter  mev(Vector3f pos, LoopIter loop, VertexIter start_v);
+
 }
 
 

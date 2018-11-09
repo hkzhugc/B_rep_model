@@ -53,23 +53,27 @@ namespace B_rep
 		{
 			HalfEdgeIter he = _half_edge;
 			while (he->vertex() != new_he->vertex()) he = he->next();
-			{
+			/*{
 				printf("enter new half edge\n");
 				Vector3f pos = new_he->vertex()->pos;
 				printf("v at : (%f, %f, %f)\n", pos.x, pos.y, pos.z);
 				pos = new_he->twin()->vertex()->pos;
 				printf("v at : (%f, %f, %f)\n", pos.x, pos.y, pos.z);
-			}
+			}*/
+			new_he->next() = new_he->twin();
 			new_he->twin()->next() = he;
 			he->twin()->next() = new_he;
 
-			{
+			/*{
 				printf("old half edge\n");
 				Vector3f pos = he->next()->vertex()->pos;
 				printf("v at : (%f, %f, %f)\n", pos.x, pos.y, pos.z);
 				pos = he->next()->next()->twin()->vertex()->pos;
+				printf("halfedge equal is %d\n", (new_he->twin() == he->next()->next()->twin()));
 				printf("v at : (%f, %f, %f)\n", pos.x, pos.y, pos.z);
-			}
+				pos = he->next()->next()->next()->vertex()->pos;
+				printf("v at : (%f, %f, %f)\n", pos.x, pos.y, pos.z);
+			}*/
 		}
 		_half_edge_num++;
 	}
