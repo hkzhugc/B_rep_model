@@ -27,24 +27,28 @@ namespace B_rep
 		Face() { _loop_list.clear(); };
 		~Face() {};
 		void AddLoop(LoopIter li) { _loop_list.push_back(li); }
+		LoopIter & out_loop() { return _out_loop; }
 		Solid * solid;
 	private:
 		vector<LoopIter> _loop_list;
+		LoopIter _out_loop;
 	};
 
 	class Loop
 	{
 	public:
-		Loop() { _half_edge_num = 0; };
+		Loop() { _half_edge_num = 0; isEmpty = true; };
 		~Loop() {};
 
 		FaceIter & face() { return _face; }
 		HalfEdgeIter & half_edge() { return _half_edge; }
 		void AddHalfEdge(HalfEdgeIter new_he);
+		void SetHalfEdge(HalfEdgeIter he, LoopIter _this);
 	private:
 		FaceIter _face;
 		HalfEdgeIter _half_edge;
 		int _half_edge_num;
+		bool isEmpty;
 	};
 
 	class Edge
@@ -120,9 +124,12 @@ namespace B_rep
 		vector<FaceIter> _face_list;
 	};
 
+	LoopIter divide_loop(LoopIter big_loop, HalfEdgeIter add_he);//a helper func for mef
+	HalfEdgeIter pre(HalfEdgeIter h);
+
 	Solid * mvfs(Vector3f pos, VertexIter &new_vi, FaceIter &new_fi, LoopIter &new_li);
 	VertexIter  mev(Vector3f pos, LoopIter loop, VertexIter start_v);
-
+	FaceIter mef(VertexIter start_v, VertexIter end_v, LoopIter loop);
 }
 
 
