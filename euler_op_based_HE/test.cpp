@@ -16,43 +16,43 @@ int main()
 	
 	printf("f1 loop is l1 : %d\n", f1->out_loop() == l1);
 	FaceIter f2 = mef(v3, v1, l1);
-	
-	HalfEdgeIter _h = f1->out_loop()->half_edge();
+	printf("--mef---\n");
+	HalfEdgeIter _h = f2->out_loop()->half_edge();
 	do
 	{
 		Vector3f pos = _h->vertex()->pos;
 		printf("v at : (%f, %f, %f)\n", pos.x, pos.y, pos.z);
 		_h = _h->next();
-	} while (_h != f1->out_loop()->half_edge());
+	} while (_h != f2->out_loop()->half_edge());
 	printf("-------------------\n");
 
 	Vector3f pos4(0, 1, 1);
 	Vector3f pos5(0, 2, 1);
 	Vector3f pos6(0, 1, 2);
-
-	VertexIter v4 = mev(pos4, l1, v1);
-
-	_h = f1->out_loop()->half_edge();
+	
+	VertexIter v4 = mev(pos4, f2->out_loop(), v1);
+	printf("--mev---\n");
+	_h = f2->out_loop()->half_edge();
 	do
 	{
 		Vector3f pos = _h->vertex()->pos;
 		printf("v at : (%f, %f, %f)\n", pos.x, pos.y, pos.z);
 		_h = _h->next();
-	} while (_h != f1->out_loop()->half_edge());
+	} while (_h != f2->out_loop()->half_edge());
 	printf("-------------------\n");
-
-	VertexIter v5 = mev(pos5, l1, v4);
-	VertexIter v6 = mev(pos6, l1, v5);
-
-	FaceIter f3 = mef(v6, v4, l1);
-
-	_h = l1->half_edge();
+	VertexIter v5 = mev(pos5, f2->out_loop(), v4);
+	printf("--mev---\n");
+	VertexIter v6 = mev(pos6, f2->out_loop(), v5);
+	printf("--mev---\n");
+	FaceIter f3 = mef(v6, v4, f2->out_loop());
+	printf("--mef---\n");
+	_h = f2->out_loop()->half_edge();
 	do
 	{
 		Vector3f pos = _h->vertex()->pos;
 		printf("v at : (%f, %f, %f)\n", pos.x, pos.y, pos.z);
 		_h = _h->next();
-	} while (_h != l1->half_edge());
+	} while (_h != f2->out_loop()->half_edge());
 	printf("-------------------\n");
 
 	_h = f3->out_loop()->half_edge();

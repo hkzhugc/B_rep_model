@@ -54,6 +54,7 @@ namespace B_rep
 		FaceIter new_face = solid->newFace();
 		LoopIter new_loop = solid->newLoop();
 
+		new_face->solid = solid;
 		new_face->out_loop() = new_loop;
 		new_loop->face() = new_face;
 
@@ -63,12 +64,12 @@ namespace B_rep
 		l_he->vertex() = end_v;
 		l_he->twin() = r_he;
 		r_he->twin() = l_he;
-
+		printf("---pre_div---\n");
 		divide_loop(loop, r_he);
-
-		//reset loop->halfedge and new_loop->halfedge, make sure loop point to the truely inner one
-		loop->SetHalfEdge(r_he, loop);
-		new_loop->SetHalfEdge(l_he, new_loop);
+		printf("---divide---\n");
+		//reset loop->halfedge and new_loop->halfedge, make sure loop point to the bound half edges
+		loop->SetHalfEdge(l_he, loop);
+		new_loop->SetHalfEdge(r_he, new_loop);
 		return new_face;
 	}
 
@@ -90,11 +91,13 @@ namespace B_rep
 		HalfEdgeIter inner_begin = big_loop->half_edge();
 		HalfEdgeIter inner_begin_pre = pre(big_loop->half_edge());
 		while (inner_begin->vertex() != end_v) { inner_begin_pre = inner_begin; inner_begin = inner_begin->next(); assert(inner_begin_pre->next() == inner_begin); }
+		printf("---find inner begin---\n");
 		//assert(inner_begin_pre->next() == inner_begin);
 
 		HalfEdgeIter inner_end = big_loop->half_edge();
 		HalfEdgeIter inner_end_pre = pre(big_loop->half_edge());
 		while (inner_end->vertex() != begin_v) { inner_end_pre = inner_end; inner_end = inner_end->next(); assert(inner_end_pre->next() == inner_end); }
+		printf("---find inner end---\n");
 		//assert(inner_end_pre->next() == inner_end);
 		add_he->next() = inner_begin;
 		inner_begin_pre->next() = add_he_twin;
