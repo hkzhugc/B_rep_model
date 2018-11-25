@@ -21,6 +21,28 @@ namespace B_rep
 	typedef     list<Face>::iterator     FaceIter;
 	typedef     list<Loop>::iterator     LoopIter;
 	typedef list<HalfEdge>::iterator HalfEdgeIter;
+
+	inline bool operator<(const HalfEdgeIter& i, const HalfEdgeIter& j) {
+		return &*i < &*j;
+	}
+
+	inline bool operator<(const VertexIter& i, const VertexIter& j) {
+		return &*i < &*j;
+	}
+
+	inline bool operator<(const EdgeIter& i, const EdgeIter& j) {
+		return &*i < &*j;
+	}
+
+	inline bool operator<(const FaceIter& i, const FaceIter& j) {
+		return &*i < &*j;
+	}
+
+	inline bool operator<(const LoopIter& i, const LoopIter& j) {
+		return &*i < &*j;
+	}
+
+
 	class Face
 	{
 	public:
@@ -29,6 +51,7 @@ namespace B_rep
 		void AddLoop(LoopIter li) { _loop_list.push_back(li); }
 		LoopIter & out_loop() { return _out_loop; }
 		Solid * solid;
+		void RenderWireFrame();
 	private:
 		vector<LoopIter> _loop_list;
 		LoopIter _out_loop;
@@ -44,6 +67,7 @@ namespace B_rep
 		HalfEdgeIter & half_edge() { return _half_edge; }
 		void AddHalfEdge(HalfEdgeIter new_he);
 		void SetHalfEdge(HalfEdgeIter he, LoopIter _this);
+		void RenderWireFrame();
 	private:
 		FaceIter _face;
 		HalfEdgeIter _half_edge;
@@ -114,7 +138,14 @@ namespace B_rep
 		EdgeIter     newEdge() { return      _edges.insert(_edges.end(), Edge()); }
 		LoopIter     newLoop() { return      _loops.insert(_loops.end(), Loop()); }
 		FaceIter     newFace() { return      _faces.insert(_faces.end(), Face()); }
+		void deleteHalfedge(HalfEdgeIter h) { _halfedges.erase(h); }
+		void deleteFace(FaceIter f) { _faces.erase(f); }
+		void deleteLoop(LoopIter lp) { _loops.erase(lp); }
+		void deleteVertex(VertexIter v) { _vertices.erase(v); }
+		void deleteEdge(EdgeIter e) { _edges.erase(e); }
+
 		void AddFace(FaceIter fi) { _face_list.push_back(fi); }
+		void RenderWireFrame();
 	private:
 		list<Face> _faces;
 		list<Loop> _loops;
@@ -130,6 +161,9 @@ namespace B_rep
 	Solid * mvfs(Vector3f pos, VertexIter &new_vi, FaceIter &new_fi, LoopIter &new_li);
 	VertexIter  mev(Vector3f pos, LoopIter loop, VertexIter start_v);
 	FaceIter mef(VertexIter start_v, VertexIter end_v, LoopIter loop);
+	LoopIter kemr(HalfEdgeIter l_he, HalfEdgeIter r_he, LoopIter lp);
+	LoopIter kemr(EdgeIter e, LoopIter lp);
+	LoopIter kemr(VertexIter v1, VertexIter v2, LoopIter lp);
 }
 
 

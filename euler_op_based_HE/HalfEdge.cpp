@@ -60,6 +60,8 @@ namespace B_rep
 
 		l_he->edge() = ei;
 		r_he->edge() = ei;
+		ei->left_he() = l_he;
+		ei->right_he() = r_he;
 		r_he->vertex() = start_v;
 		l_he->vertex() = end_v;
 		l_he->twin() = r_he;
@@ -73,6 +75,68 @@ namespace B_rep
 		return new_face;
 	}
 
+	LoopIter kemr(HalfEdgeIter l_he, HalfEdgeIter r_he, LoopIter lp)
+	{
+		Solid * solid = lp->face()->solid;
+		
+		EdgeIter e = r_he->edge();
+
+		FaceIter f = lp->face();
+		LoopIter new_lp = solid->newLoop();
+		f->AddLoop(new_lp);
+
+		if (r_he->next() == l_he)
+		{
+			printf("only one edge, just delete\n");
+			solid->deleteHalfedge(r_he);
+			solid->deleteHalfedge(l_he);
+		}
+		else
+		{
+			printf("connect the halfedge\n");
+			HalfEdgeIter l_he_pre = pre(l_he);
+			HalfEdgeIter r_he_next = r_he->next();
+			HalfEdgeIter r_he_pre = pre(r_he);
+			HalfEdgeIter l_he_next = l_he->next();
+
+			r_he_pre->next() = l_he_next;
+			l_he_pre->next() = r_he_next;
+			new_lp->SetHalfEdge(r_he_next, new_lp);
+			lp->SetHalfEdge(r_he_pre, lp);
+			
+		}
+		solid->deleteEdge(e);
+		return new_lp;
+	}
+
+	LoopIter kemr(EdgeIter e, LoopIter lp)
+	{
+		return kemr(e->left_he(), e->right_he(), lp);
+	}
+
+	LoopIter kemr(VertexIter v1, VertexIter v2, LoopIter lp)
+	{
+		HalfEdgeIter he = lp->half_edge();
+		bool isFound = false;
+		do
+		{
+			if (he->vertex() == v1)
+			{
+				if (he->twin()->vertex() == v2)
+				{
+					isFound = true;
+					break;
+				}
+			}
+			he = he->next();
+		} while (he != lp->half_edge());
+		if (isFound) return kemr(he->twin(), he, lp);
+		else 
+		{
+			printf("can't not found edge (v1, v2) in loop lp\n");
+			return lp;
+		}
+	}
 
 	HalfEdgeIter pre(HalfEdgeIter h)
 	{
@@ -141,6 +205,56 @@ namespace B_rep
 			_h->loop() = _this;
 			_h = _h->next();
 		} while (_h != _half_edge);
+	}
+
+	void Solid::RenderWireFrame()
+	{
+		glColor3f(0.0f, 1.0f, 1.0f);
+		glEnable(GL_BLEND);
+		glLineWidth(5.0f);
+		printf("render wireframe, %d edges\n", _edges.size());
+		int cnt = 0;
+		for (auto e : _edges)
+		{
+			printf("%dth edge\n", ++cnt);
+			glBegin(GL_LINES);
+			VertexIter start_v, end_v;
+			start_v = e.right_he()->vertex();
+			end_v = e.left_he()->vertex();
+			glVertex3f(start_v->pos.x, start_v->pos.y, start_v->pos.z);
+			glVertex3f(end_v->pos.x, end_v->pos.y, end_v->pos.z);
+			glEnd();
+		}
+	}
+
+	void Loop::RenderWireFrame()
+	{
+		glColor3f(0.0f, 1.0f, 1.0f);
+		glEnable(GL_BLEND);
+		glLineWidth(5.0f);
+		glBegin(GL_LINE_LOOP);
+		HalfEdgeIter _h = _half_edge;
+		int cnt = 0;
+		do
+		{
+			printf("%dth Points\n", ++cnt);
+			Vector3f pos = _h->vertex()->pos;
+			printf("v at : (%f, %f, %f)\n", pos.x, pos.y, pos.z);
+			glVertex3f(pos.x, pos.y, pos.z);
+			_h = _h->next();
+		} while (_h != _half_edge);
+		//glVertex3f(start_v->pos.x, start_v->pos.y, start_v->pos.z);
+		glEnd();
+	}
+
+	void Face::RenderWireFrame()
+	{
+		
+		_out_loop->RenderWireFrame();
+		for (auto lp : _loop_list)
+		{
+			lp->RenderWireFrame();
+		}
 	}
 }
 
