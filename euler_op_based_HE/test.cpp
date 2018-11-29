@@ -1,13 +1,16 @@
 ﻿#include "HalfEdge.h"
 #include <iostream>
 #include <stdio.h>
+#include <map>
 using namespace B_rep;
-
+using namespace std;
 Solid * s;
 
 LoopIter drawlp;
 
 FaceIter drawf;
+
+
 
 //a function for init some feature in gl
 void init()
@@ -59,8 +62,9 @@ void display()
 	glEnd();
 	//glScalef(0.5, 0.5, 0.5);
 	//s->RenderWireFrame();
-	//drawlp->RenderWireFrame();
-	drawf->RenderWireFrame();
+	//drawf->RenderWireFrame();
+	drawf->RenderFace();
+	//drawf->GetNormal();
 	glFlush();
 }
 
@@ -87,7 +91,7 @@ int main(int argc, char** argv)
 		_h = _h->next();
 	} while (_h != f2->out_loop()->half_edge());
 	printf("-------------------\n");
-
+	
 	Vector3f pos4(0, 1, 1);
 	Vector3f pos5(0, 2, 1);
 	Vector3f pos6(0, 1, 2);
@@ -125,7 +129,7 @@ int main(int argc, char** argv)
 		_h = _h->next();
 	} while (_h != f3->out_loop()->half_edge());
 	printf("-------------------\n");
-	//kemr(v1, v4, f2->out_loop());
+	kemr(v1, v4, f2->out_loop());
 	printf("---kemr---\n");
 	getchar();
 	drawlp = f2->out_loop();

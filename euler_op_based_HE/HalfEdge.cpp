@@ -5,8 +5,8 @@ namespace B_rep
 	Solid * mvfs(Vector3f pos, VertexIter &new_vi, FaceIter &new_fi, LoopIter &new_li)
 	{
 		Solid * solid = new Solid();
-		VertexIter vi = solid->newVertex();
-		vi->pos = pos;
+		VertexIter vi = solid->newVertex(pos);
+		//vi->pos = pos;
 		FaceIter fi = solid->newFace();
 		fi->solid = solid;
 		solid->AddFace(fi);
@@ -23,8 +23,8 @@ namespace B_rep
 	VertexIter  mev(Vector3f pos, LoopIter loop, VertexIter start_v)
 	{
 		Solid * solid = loop->face()->solid;
-		VertexIter end_v = solid->newVertex();
-		end_v->pos = pos;
+		VertexIter end_v = solid->newVertex(pos);
+		//end_v->pos = pos;
 		EdgeIter ei = solid->newEdge();
 		HalfEdgeIter l_he = solid->newHalfedge();
 		HalfEdgeIter r_he = solid->newHalfedge();
@@ -138,6 +138,12 @@ namespace B_rep
 		}
 	}
 
+	LoopIter kfmrh(FaceIter loop_f, FaceIter deleted_f)
+	{
+		return loop_f->out_loop();
+	}
+
+
 	HalfEdgeIter pre(HalfEdgeIter h)
 	{
 		HalfEdgeIter _h = h;
@@ -225,6 +231,7 @@ namespace B_rep
 			glVertex3f(end_v->pos.x, end_v->pos.y, end_v->pos.z);
 			glEnd();
 		}
+		glFlush();
 	}
 
 	void Loop::RenderWireFrame()
@@ -245,6 +252,7 @@ namespace B_rep
 		} while (_h != _half_edge);
 		//glVertex3f(start_v->pos.x, start_v->pos.y, start_v->pos.z);
 		glEnd();
+		glFlush();
 	}
 
 	void Face::RenderWireFrame()
@@ -255,6 +263,156 @@ namespace B_rep
 		{
 			lp->RenderWireFrame();
 		}
+	}
+
+	Vector3f Face::GetNormal()
+	{
+		bool isFind[3] = {false, false, false};
+		HalfEdgeIter h_max2 = out_loop()->half_edge();
+		HalfEdgeIter idxFind[3] = { h_max2, h_max2, h_max2 };
+		for (int i = 0; i < 3; ++i)
+		{
+			HalfEdgeIter h = out_loop()->half_edge();
+			HalfEdgeIter max_h = h;
+			Vector3f max = h->vertex()->pos;
+			h = h->next();
+			do
+			{
+				Vector3f p = h->vertex()->pos;
+				if (p[i] > max[i])
+				{
+					/*
+					printf("p[%d] = %f > max[%d] = %f ? %d\n", i, p[i], i, max[i], p[i] > max[i]);
+					printf("%d dim max at : (%f, %f, %f)\n", i, max.x, max.y, max.z);
+					printf("%d dim p at : (%f, %f, %f)\n", i, p.x, p.y, p.z);
+					*/
+					max = p;
+					max_h = h;
+					isFind[i] = true;
+				}
+				else if (p[i] < max[i])
+				{
+					isFind[i] = true;
+				}
+				h = h->next();
+			} while (h != out_loop()->half_edge());
+			if (isFind[i])
+			{
+				idxFind[i] = max_h;
+			}
+		}
+		for (int i = 0; i < 3; ++i)
+		{
+			if (isFind[i])
+			{
+				h_max2 = idxFind[i];
+				Vector3f max = h_max2->vertex()->pos;
+				break;
+			}
+		}
+		//max2 was a convex point
+		Vector3f max2 = h_max2->vertex()->pos;
+		
+
+		Vector3f p0, p1, p2, normal;
+		p0 = pre(h_max2)->vertex()->pos;
+		p1 = h_max2->vertex()->pos;
+		p2 = h_max2->next()->vertex()->pos;
+
+		normal = glm::normalize(glm::cross(p1 - p0, p2 - p1));
+		return normal;
+	}
+
+	void CALLBACK PolyLine3DBegin(GLenum type)
+	{
+		glBegin(type);
+	}
+
+	void CALLBACK PolyLine3DVertex(GLdouble * vertex)
+	{
+		const GLdouble *pointer = (GLdouble *)vertex;
+		glColor3d(1.0, 0, 0); 
+		glVertex3dv(pointer);
+	}
+
+	void CALLBACK PolyLine3DEnd()
+	{
+		glEnd();
+	}
+	GLUtesselator* tesser()
+	{
+		GLUtesselator * tess;
+		tess = gluNewTess();
+		gluTessCallback(tess, GLU_TESS_BEGIN, (void (CALLBACK*)())&PolyLine3DBegin);
+		gluTessCallback(tess, GLU_TESS_VERTEX, (void (CALLBACK*)())&PolyLine3DVertex);
+		gluTessCallback(tess, GLU_TESS_END, (void (CALLBACK*)())&PolyLine3DEnd);
+		return tess;
+	}
+
+#define GLUTESSFACE 1
+	void Face::RenderFace()
+	{
+		Vector3f normal = GetNormal();
+		GLUtesselator *tobj = tesser();
+		if (!tobj) { return; }
+#if GLUTESSFACE
+		gluTessBeginPolygon(tobj, NULL);
+		gluTessBeginContour(tobj);
+#else
+		glColor3f(0.0f, 1.0f, 1.0f);
+		glEnable(GL_BLEND);
+		glLineWidth(5.0f);
+		glBegin(GL_LINE_LOOP);
+#endif
+			HalfEdgeIter _h = out_loop()->half_edge();
+			do
+			{
+				Vector3f pos = _h->vertex()->pos;
+#if GLUTESSFACE
+				gluTessVertex(tobj, _h->vertex()->gl_pos, _h->vertex()->gl_pos);
+#else
+				glVertex3f(_h->vertex()->gl_pos[0], _h->vertex()->gl_pos[1], _h->vertex()->gl_pos[2]);
+#endif
+				_h = _h->next();
+			} while (_h != out_loop()->half_edge());
+#if GLUTESSFACE
+		gluTessEndContour(tobj);
+#else
+		glEnd();
+#endif
+		int lp_cnt = 0;
+		for (auto lp : _loop_list)
+		{
+#if GLUTESSFACE
+			gluTessBeginContour(tobj);
+#else
+			glColor3f(0.0f, 1.0f, 1.0f);
+			glEnable(GL_BLEND);
+			glLineWidth(5.0f);
+			glBegin(GL_LINE_LOOP);
+#endif
+			HalfEdgeIter _h = lp->half_edge();
+			do
+			{
+				Vector3f pos = _h->vertex()->pos;
+#if GLUTESSFACE
+				gluTessVertex(tobj, _h->vertex()->gl_pos, _h->vertex()->gl_pos);
+#else
+				glVertex3f(_h->vertex()->gl_pos[0], _h->vertex()->gl_pos[1], _h->vertex()->gl_pos[2]);
+#endif
+				_h = _h->next();
+			} while (_h != lp->half_edge());
+#if GLUTESSFACE
+			gluTessEndContour(tobj);
+#else
+			glEnd();
+#endif
+		}
+#if GLUTESSFACE
+		gluTessEndPolygon(tobj);
+		gluDeleteTess(tobj);
+#endif
+		glFlush();
 	}
 }
 

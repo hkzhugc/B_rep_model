@@ -1,6 +1,7 @@
 #pragma once
 #include <gl/glut.h>
 #include <glm/vec3.hpp>
+#include <glm/glm.hpp>
 #include <vector>
 #include <list>
 
@@ -52,6 +53,8 @@ namespace B_rep
 		LoopIter & out_loop() { return _out_loop; }
 		Solid * solid;
 		void RenderWireFrame();
+		void RenderFace();
+		Vector3f GetNormal();
 	private:
 		vector<LoopIter> _loop_list;
 		LoopIter _out_loop;
@@ -111,9 +114,10 @@ namespace B_rep
 	{
 	public:
 		Vertex() {};
-		Vertex(Vector3f _pos) : pos(_pos){};
+		Vertex(Vector3f _pos) : pos(_pos){ for (int i = 0; i < 3; i++) gl_pos[i] = pos[i]; };
 		~Vertex() {};
 		Vector3f pos;
+		GLdouble gl_pos[3];
 	private:
 
 		HalfEdgeIter _half_edge;
@@ -135,6 +139,7 @@ namespace B_rep
 		FaceIter & face() { return _faces.begin(); }
 		HalfEdgeIter newHalfedge() { return  _halfedges.insert(_halfedges.end(), HalfEdge()); }
 		VertexIter   newVertex() { return   _vertices.insert(_vertices.end(), Vertex()); }
+		VertexIter   newVertex(Vector3f _pos) { return   _vertices.insert(_vertices.end(), Vertex(_pos)); }
 		EdgeIter     newEdge() { return      _edges.insert(_edges.end(), Edge()); }
 		LoopIter     newLoop() { return      _loops.insert(_loops.end(), Loop()); }
 		FaceIter     newFace() { return      _faces.insert(_faces.end(), Face()); }
@@ -164,6 +169,7 @@ namespace B_rep
 	LoopIter kemr(HalfEdgeIter l_he, HalfEdgeIter r_he, LoopIter lp);
 	LoopIter kemr(EdgeIter e, LoopIter lp);
 	LoopIter kemr(VertexIter v1, VertexIter v2, LoopIter lp);
+	LoopIter kfmrh(FaceIter loop_f, FaceIter deleted_f);
 }
 
 
