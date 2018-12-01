@@ -18,12 +18,18 @@
     <ClInclude Include="HalfEdge.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="OpReader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HalfEdge.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="OpReader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

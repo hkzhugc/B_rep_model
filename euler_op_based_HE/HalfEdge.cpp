@@ -2,6 +2,7 @@
 
 namespace B_rep
 {
+	Vector3f normal;
 	Solid * mvfs(Vector3f pos, VertexIter &new_vi, FaceIter &new_fi, LoopIter &new_li)
 	{
 		Solid * solid = new Solid();
@@ -9,7 +10,7 @@ namespace B_rep
 		//vi->pos = pos;
 		FaceIter fi = solid->newFace();
 		fi->solid = solid;
-		solid->AddFace(fi);
+		//solid->AddFace(fi);
 		LoopIter li = solid->newLoop();
 		li->face() = fi;
 		fi->out_loop() = li;
@@ -83,6 +84,7 @@ namespace B_rep
 
 		FaceIter f = lp->face();
 		LoopIter new_lp = solid->newLoop();
+		new_lp->face() = f;
 		f->AddLoop(new_lp);
 
 		if (r_he->next() == l_he)
@@ -140,9 +142,65 @@ namespace B_rep
 
 	LoopIter kfmrh(FaceIter loop_f, FaceIter deleted_f)
 	{
+		Solid * solid = loop_f->solid;
+		
+		LoopIter &lp = deleted_f->out_loop();
+		lp->face() = loop_f;
+		loop_f->AddLoop(lp);
+		solid->deleteFace(deleted_f);
 		return loop_f->out_loop();
 	}
 
+
+	void sweep(FaceIter f, Vector3f dir, float dis)
+	{
+		dir = glm::normalize(dir);
+		dir *= dis;
+		FaceIter upper_f;
+		printf("face size if %d\n", f->solid->face_list().size());
+		//sweep out_loop first
+		for (int lp_idx = 0; lp_idx < f->inner_loops().size() + 1; lp_idx++)
+		{
+			LoopIter lp;
+			if (lp_idx == 0)
+				lp = f->out_loop();
+			else
+			{
+				lp = f->inner_loops()[lp_idx - 1];
+			}
+			assert(lp->face() == f);
+			HalfEdgeIter first_he = lp->half_edge();
+			HalfEdgeIter next_he = first_he->next();
+			vector<VertexIter> v_stored;
+			while (next_he != lp->half_edge())
+			{
+				VertexIter v = next_he->vertex();
+				Vector3f pos = v->pos;
+				v_stored.push_back(v);
+				next_he = next_he->next();
+				printf("v at : (%f, %f, %f)\n", pos.x, pos.y, pos.z);
+			}
+			VertexIter first_v = first_he->vertex();
+			VertexIter first_up = mev(first_v->pos + dir, lp, first_v);
+			VertexIter prev_up = first_up;
+			printf("v_stored size = %d\n", v_stored.size());
+			for (auto v : v_stored)
+			{
+				VertexIter up = mev(v->pos + dir, lp, v);
+				FaceIter newf = mef(up, prev_up, lp);
+				printf("1 face size if %d\n", f->solid->face_list().size());
+				prev_up = up;
+			}
+			if (lp_idx == 0)
+				upper_f = mef(first_up, prev_up, lp);
+			else
+			{
+				mef(first_up, prev_up, lp);
+			}
+			printf("2 face size if %d\n", f->solid->face_list().size());
+			//break;
+		}
+	}
 
 	HalfEdgeIter pre(HalfEdgeIter h)
 	{
@@ -234,6 +292,17 @@ namespace B_rep
 		glFlush();
 	}
 
+	void Solid::RenderFace()
+	{
+		int cnt = 0;
+		for (FaceIter f : _face_list)
+		{
+			normal = f->GetNormal();
+			glColor3f((normal.x + 1) / 2, (normal.y + 1) / 2, (normal.z + 1) / 2);
+			f->RenderFace();
+		}
+	}
+
 	void Loop::RenderWireFrame()
 	{
 		glColor3f(0.0f, 1.0f, 1.0f);
@@ -244,9 +313,7 @@ namespace B_rep
 		int cnt = 0;
 		do
 		{
-			printf("%dth Points\n", ++cnt);
 			Vector3f pos = _h->vertex()->pos;
-			printf("v at : (%f, %f, %f)\n", pos.x, pos.y, pos.z);
 			glVertex3f(pos.x, pos.y, pos.z);
 			_h = _h->next();
 		} while (_h != _half_edge);
@@ -264,7 +331,7 @@ namespace B_rep
 			lp->RenderWireFrame();
 		}
 	}
-
+ 
 	Vector3f Face::GetNormal()
 	{
 		bool isFind[3] = {false, false, false};
@@ -327,18 +394,21 @@ namespace B_rep
 	{
 		glBegin(type);
 	}
-
+	
 	void CALLBACK PolyLine3DVertex(GLdouble * vertex)
 	{
-		const GLdouble *pointer = (GLdouble *)vertex;
-		glColor3d(1.0, 0, 0); 
-		glVertex3dv(pointer);
+		GLdouble* pt;
+		pt = (GLdouble*)vertex;
+		glNormal3f(normal.x, normal.y, normal.z);
+		//printf("normal at : (%f, %f, %f)\n", normal.x, normal.y, normal.z);
+		glVertex3dv(pt);
 	}
 
 	void CALLBACK PolyLine3DEnd()
 	{
 		glEnd();
 	}
+
 	GLUtesselator* tesser()
 	{
 		GLUtesselator * tess;
@@ -352,7 +422,6 @@ namespace B_rep
 #define GLUTESSFACE 1
 	void Face::RenderFace()
 	{
-		Vector3f normal = GetNormal();
 		GLUtesselator *tobj = tesser();
 		if (!tobj) { return; }
 #if GLUTESSFACE
@@ -412,7 +481,6 @@ namespace B_rep
 		gluTessEndPolygon(tobj);
 		gluDeleteTess(tobj);
 #endif
-		glFlush();
 	}
 }
 

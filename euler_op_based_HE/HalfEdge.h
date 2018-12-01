@@ -20,6 +20,7 @@ namespace B_rep
 	typedef   list<Vertex>::iterator   VertexIter;
 	typedef     list<Edge>::iterator     EdgeIter;
 	typedef     list<Face>::iterator     FaceIter;
+	typedef     list<FaceIter>::iterator     FFaceIter;
 	typedef     list<Loop>::iterator     LoopIter;
 	typedef list<HalfEdge>::iterator HalfEdgeIter;
 
@@ -50,7 +51,9 @@ namespace B_rep
 		Face() { _loop_list.clear(); };
 		~Face() {};
 		void AddLoop(LoopIter li) { _loop_list.push_back(li); }
+//		void AddLoop(LoopIter li, FaceIter _this) { AddLoop(li); li->face() = _this; }
 		LoopIter & out_loop() { return _out_loop; }
+		vector<LoopIter> & inner_loops() { return _loop_list; }
 		Solid * solid;
 		void RenderWireFrame();
 		void RenderFace();
@@ -142,22 +145,29 @@ namespace B_rep
 		VertexIter   newVertex(Vector3f _pos) { return   _vertices.insert(_vertices.end(), Vertex(_pos)); }
 		EdgeIter     newEdge() { return      _edges.insert(_edges.end(), Edge()); }
 		LoopIter     newLoop() { return      _loops.insert(_loops.end(), Loop()); }
-		FaceIter     newFace() { return      _faces.insert(_faces.end(), Face()); }
+		FaceIter     newFace() { FaceIter f = _faces.insert(_faces.end(), Face()); _face_list.push_back(f); return f; }
+		list<FaceIter> & face_list() { return _face_list; }
+
 		void deleteHalfedge(HalfEdgeIter h) { _halfedges.erase(h); }
-		void deleteFace(FaceIter f) { _faces.erase(f); }
+		void deleteFace(FaceIter f) { 
+			auto iter = find(_face_list.begin(), _face_list.end(), f);
+			_face_list.erase(iter);
+			_faces.erase(f);
+		}
 		void deleteLoop(LoopIter lp) { _loops.erase(lp); }
 		void deleteVertex(VertexIter v) { _vertices.erase(v); }
 		void deleteEdge(EdgeIter e) { _edges.erase(e); }
 
 		void AddFace(FaceIter fi) { _face_list.push_back(fi); }
 		void RenderWireFrame();
+		void RenderFace();
 	private:
 		list<Face> _faces;
 		list<Loop> _loops;
 		list<Edge> _edges;
 		list<HalfEdge> _halfedges;
 		list<Vertex> _vertices;
-		vector<FaceIter> _face_list;
+		list<FaceIter> _face_list;
 	};
 
 	LoopIter divide_loop(LoopIter big_loop, HalfEdgeIter add_he);//a helper func for mef
@@ -170,6 +180,8 @@ namespace B_rep
 	LoopIter kemr(EdgeIter e, LoopIter lp);
 	LoopIter kemr(VertexIter v1, VertexIter v2, LoopIter lp);
 	LoopIter kfmrh(FaceIter loop_f, FaceIter deleted_f);
+
+	void sweep(FaceIter f, Vector3f dir, float dis);
 }
 
 
