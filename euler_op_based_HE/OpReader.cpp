@@ -23,14 +23,19 @@ B_rep::Vector3f OpReader::read_pos(string line)
 	int left_pos = line.find_first_of('(');
 	int space_pos = line.find_first_of(' ', left_pos + 1);
 	B_rep::Vector3f pos;
-	cout << "read pos.x : " << line.substr(left_pos + 1, space_pos) << endl;
+	//cout << "read pos.x : " << line.substr(left_pos + 1, space_pos) << endl;
 	istringstream(line.substr(left_pos + 1, space_pos)) >> pos.x;
-	cout << "read pos.x : " << pos.x << endl;
+	//cout << "read pos.x : " << pos.x << endl;
 	left_pos = space_pos;
 	space_pos = line.find_first_of(' ', left_pos + 1);
-	cout << "read pos.y : " << line.substr(left_pos + 1, space_pos) << endl;
+	//cout << "read pos.y : " << line.substr(left_pos + 1, space_pos) << endl;
 	istringstream(line.substr(left_pos + 1, space_pos)) >> pos.y;
-	cout << "read pos.y : " << pos.y << endl;
+	//cout << "read pos.y : " << pos.y << endl;
+	left_pos = space_pos;
+	space_pos = line.find_first_of(' ', left_pos + 1);
+	//cout << "read pos.z : " << line.substr(left_pos + 1, space_pos) << endl;
+	istringstream(line.substr(left_pos + 1, space_pos)) >> pos.z;
+	//cout << "read pos.z : " << pos.z << endl;
 	return pos;
 }
 
@@ -53,7 +58,8 @@ void OpReader::start_build()
 		cout << line << endl;
 		int pos1;
 		CMD cmd = read_cmd(line, pos1);
-		read_pos(line);
+		B_rep::Vector3f pos = read_pos(line);
+		printf("pos %f %f %f\n", pos.x, pos.y, pos.z);
 		//do_cmd(cmd, line);
 	}
 	return;
